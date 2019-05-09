@@ -1,5 +1,5 @@
 import classifier
-import graphics as gui
+import gui.graphics as gui
 
 
 def readFromFile(filename):
@@ -12,6 +12,6 @@ def readFromFile(filename):
 
 
 
-data = readFromFile("data.txt")
+data = readFromFile("data/data.txt")
 tree = classifier.fit(data)
 gui.show(tree=tree, wSize=(1500, 600))
