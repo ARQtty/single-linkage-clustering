@@ -1,4 +1,5 @@
 class Node():
+    # 56 bytes
     def __init__(self, value, parent=None, lChild=None, rChild=None):
         self.value = value
         self.level = 0
@@ -27,15 +28,17 @@ def createParent(node1, node2):
 
 
 def fit(data):
+    # O(N^3) algorithm time asimptotics
     data = [Node(x) for x in data]
     distF = lambda p1, p2: abs(p1.value - p2.value)
 
+    # O(N)
     while len(data) != 1:
-         #clastering
         minDist = float('inf')
         minP1_index = None
         minP2_index = None
         
+        # O(N^2)
         for i, p1 in enumerate(data):
             for j, p2 in enumerate(data):
                 if p1 != p2 and distF(p1, p2) < minDist:
@@ -48,10 +51,11 @@ def fit(data):
         # print(clastered)
         if minP1_index > minP2_index:
             minP1_index, minP2_index = minP2_index, minP1_index
+        
         # Выкинем две точки, которые объединили
-        data = data[:minP1_index] + data[minP1_index+1:minP2_index] + data[minP2_index+1:]
-        # Закинем точку-новый_кластер
-        data.append(newClast)
-
+        # И закинем точку-новый_кластер
+        data[minP1_index] = newClast
+        data = data[:minP2_index] + data[minP2_index+1:]
+        
     # Возвращаем корень
     return data[0]
