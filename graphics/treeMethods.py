@@ -1,3 +1,5 @@
+# Подключается в gui
+
 def depthOfChildren(v, currDepth=0):
     lDepth = 0
     rDepth = 0

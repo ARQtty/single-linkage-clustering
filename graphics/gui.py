@@ -54,9 +54,10 @@ class TreeVisualizer(Frame):
         dy = 10
 
         def loc2absX(x):
-            absLenX = self.width *0.9
-            locLenX = maxP - leastP 
-            return int(absLenX/locLenX * (x - leastP + 0.5))
+            margin = 0.05
+            absLenX = self.width*(1 - margin)
+            locLenX = maxP - leastP
+            return int(absLenX/locLenX * (x - leastP)) + self.width*(margin/2)
 
         def loc2absY(level):
             absLenY = self.height
