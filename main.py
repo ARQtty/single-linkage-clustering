@@ -1,11 +1,12 @@
 import classifier
 import graphics.gui as gui
+import data.generator as generator
 
 
 def readFromFile(filename):
 	data = []
 	with open(filename, "r") as fin:
-		data = [int(x) for x in fin.readline().split()]
+		data = [float(x) for x in fin.readline().split()]
 	return data
 
 
@@ -13,5 +14,7 @@ def readFromFile(filename):
 
 
 data = readFromFile("data/data.txt")
+data = generator.badCaseGenerator(None)
+
 tree = classifier.fit(data)
-gui.show(tree=tree, wSize=(1500, 600))
+gui.show(tree=tree, wSize=(900, 400))
