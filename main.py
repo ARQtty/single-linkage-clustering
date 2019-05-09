@@ -1,5 +1,5 @@
 import classifier
-import gui.graphics as gui
+import graphics.gui as gui
 
 
 def readFromFile(filename):

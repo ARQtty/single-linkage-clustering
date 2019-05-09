@@ -1,7 +1,7 @@
 from tkinter import Tk, Canvas, Frame, BOTH
 import queue
 
-import treeMethods
+from graphics import treeMethods
 
 
 stdSize = (600, 300)
