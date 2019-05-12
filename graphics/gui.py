@@ -1,4 +1,5 @@
 from tkinter import Tk, Canvas, Frame, BOTH
+import math
 import queue
 
 from graphics import treeMethods
@@ -49,37 +50,46 @@ class TreeVisualizer(Frame):
 
     def drawByNodes(self):
         canvas = Canvas(self)
+
+        # X coord system constants
         leastP = self.points[0].value
         maxP = self.points[-1].value
+        margin = 0.05
+        absLenX = self.width*(1 - margin)
+        locLenX = maxP - leastP
+        # Y coord system constants
+        absLenY = self.height
+        log = math.log1p
         dy = 10
+        p = self.points[0]
+        while p.parent:
+            p = p.parent
+        locLenY =int(p.level)+1
+        k = absLenY*(1 - 2*margin) / log(locLenY)
+
 
         def loc2absX(x):
-            margin = 0.05
-            absLenX = self.width*(1 - margin)
-            locLenX = maxP - leastP
             return int(absLenX/locLenX * (x - leastP)) + self.width*(margin/2)
 
         def loc2absY(level):
-            absLenY = self.height
-            locLenY = 1
-            p = self.points[0]
-            while p.parent:
-                p = p.parent
-            locLenY = max(treeMethods.depthOfChildren(p))+1
-            return absLenY - int(absLenY/locLenY * (level)) - 2*dy
+            if level == 0: level = 0.1
+            return absLenY - k*log(level) - 2*dy
+
 
         # Draw points
         q = queue.Queue()
         for p in self.points:
             canvas.create_text(loc2absX(p.value), loc2absY(p.level), text=str(p.value))
-            if p.parent.level == 1:
-                q.put(p.parent) # ДА, КЛАДЁММ ДВАЖДЫ
+            # Чтобы не класть в очередь дважды, кладём только вершину при отрисовке её левого ребёнка 
+            if p.level == 0 and p.parent.lChild == p:
+                q.put(p.parent)
+
             canvas.create_line(loc2absX(p.value), loc2absY(p.level)-dy, loc2absX(p.value), loc2absY(p.parent.level)-dy)
 
         # Draw parents
         while q.qsize() > 0:
             p = q.get()
-            canvas.create_text(loc2absX(p.value), loc2absY(p.level), text=str(p.value))
+            canvas.create_text(loc2absX(p.value), loc2absY(p.level), text=str(round(p.rChild.value - p.lChild.value , 2)))
             canvas.create_line(loc2absX(p.lChild.value), loc2absY(p.level)-dy, loc2absX(p.value), loc2absY(p.level)-dy) # horizontal left
             canvas.create_line(loc2absX(p.rChild.value), loc2absY(p.level)-dy, loc2absX(p.value), loc2absY(p.level)-dy) # horizontal right
             # Not a root
@@ -124,3 +134,5 @@ def show(tree=None, points=None, wSize=stdSize):
 
     root.geometry("%dx%d" % wSize)
     root.mainloop()
+
+

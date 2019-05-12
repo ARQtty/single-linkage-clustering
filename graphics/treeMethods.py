@@ -11,21 +11,3 @@ def depthOfChildren(v, currDepth=0):
 
     return (lDepth, rDepth)
 
-
-
-def depthOfNode(searchV, treeV):
-
-    if searchV == treeV:
-        return 0
-    
-    else:
-        if treeV.lChild:
-            depth = depthOfNode(searchV, treeV.lChild)
-            if depth != None: return depth+1
-            
-        if treeV.rChild:
-            depth = depthOfNode(searchV, treeV.rChild)
-            if depth != None: return depth+1
-        
-    print("Узел ", searchV, " не найден")
-    return None

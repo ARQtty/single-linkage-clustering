@@ -2,8 +2,14 @@ import random
 
 
 
-def randomGenerator(n, lborder=0, rborder=40):
-	points = [random.randint(lborder, rborder) for x in range(n)]
+def randomFloatGenerator(n, lborder=0, rborder=30):
+	number = lambda: random.randint(lborder, rborder)+random.random()*(rborder-lborder)
+	points = sorted(list({round(number(), 1) for x in range(n)}))
+	return points
+
+def randomIntGenerator(n, lborder=0, rborder=90):
+	number = lambda: random.randint(lborder, rborder)
+	points = sorted(list({number() for x in range(n)}))
 	return points
 
 
