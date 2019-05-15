@@ -10,12 +10,7 @@ def readFromFile(filename):
 	return data
 
 
+data = readFromFile("data/data.txt")
 
 
-
-#data = readFromFile("data/data.txt")
-#data = generator.badCaseGenerator(None)
-data = generator.randomIntGenerator(15, rborder=40)
-
-tree = classifier.fitFast(data)
-gui.show(tree=tree, wSize=(900, 500))
+gui.show(classifier.fitFast(data), wSize=(800, 400))

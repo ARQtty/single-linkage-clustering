@@ -1,4 +1,6 @@
-class Node():
+import pqdict
+
+class TreeNode():
     # 56 bytes
     def __init__(self, value, parent=None, lChild=None, rChild=None):
         self.value = value
@@ -8,8 +10,8 @@ class Node():
         self.rChild = rChild
 
     def __repr__(self):
-        # return "<Node val=%f lCh=%s rCh=%s>" % (self.value, self.lChild!=None, self.rChild!=None)
         return "<Node val=%f level=%f>" % (self.value, self.level)
+
 
 def createParent(node1, node2):
     if node1.value > node2.value:
@@ -17,135 +19,90 @@ def createParent(node1, node2):
 
     avgValue = (node1.value + node2.value) / 2
     
-    parent = Node(avgValue)
+    parent = TreeNode(avgValue)
     # Для отображения на дендрограмме
     parent.level = abs(node2.value - node1.value)
     parent.lChild = node1
     parent.rChild = node2
     node1.parent = parent
     node2.parent = parent
-    print("    Creating parent", parent)
 
     return parent
 
 
-def fit(data):
-    # O(N^3)
-    # Naive. Too long 
-    data = [Node(x) for x in data]
-    distF = lambda p1, p2: abs(p1.value - p2.value)
-    finCount = 0
-
-    while len(data) != 1:               
-        minDist = float('inf')
-        minP1_index = None
-        minP2_index = None
-
-        for i, p1 in enumerate(data):
-            for j, p2 in enumerate(data):
-                if p1 != p2 and distF(p1, p2) < minDist:
-                    minP1_index = i
-                    minP2_index = j
-                    minDist = distF(p1, p2)
-       
-
-        # Нашли ближайшие кластеры. Объединяем
-        newClast = createParent(data[minP1_index], data[minP2_index])
-        # print(clastered)
-        if minP1_index > minP2_index:
-            minP1_index, minP2_index = minP2_index, minP1_index
-        
-        # Выкинем две точки, которые объединили
-        # И закинем точку-новый_кластер
-        data[minP1_index] = newClast
-        data = data[:minP2_index] + data[minP2_index+1:]
-        
-        
-    # Возвращаем корень
-    return data[0]
-
-
 def fitFast(data):
-    # O(N^2)
-    distL = [float('inf')] + [data[i] - data[i-1] for i in range(1, len(data))]
-    distR = [data[i+1] - data[i] for i in range(len(data)-1)] + [float('inf')]
+    # Total: O(nlogn)
     
     distF = lambda p1, p2: abs(p1 - p2)
 
-    #dist2next = [distF(data[i-1], data[i]) for i in range(1, len(data))]
-    Mclust = [x for x in range(len(data))]
-    MclustCenter = [x for x in data]
-    ignorePoint = [False for x in range(len(data))]
+    dist2next = pqdict.pqdict()
+    # Установка индексов и точек
+    for i in range(len(data)):
+        dist2next.additem(i, data[i])
 
-    def dumpIteration():
-        print("  ", end='')
-        print("\n  ".join([str(x) for x in [distL, distR, Mclust, MclustCenter, ignorePoint]]))
+    # Установка приоритетов
+    for i in range(len(data)-1):
+        dist2next._heap[i].prio = dist2next._heap[i+1].value - dist2next._heap[i].value
+    dist2next._heap[-1].prio = float('inf')
+
+    # Установка соседей
+    for i in range(1, len(data)-1):
+        dist2next._heap[i].prev_i = i-1
+        dist2next._heap[i].next_i = i+1
+    dist2next._heap[0].prev_i = None
+    dist2next._heap[-1].next_i= None
+    if len(dist2next) > 1:
+        dist2next._heap[0].next_i = 1
+        dist2next._heap[-1].prev_i = len(dist2next)-2
     
-    nodes = [Node(x) for x in data]
+    # Куча строится за O(N)
+    dist2next.heapify()
+
+    # Создание объекта дендрограммы
+    nodes = [TreeNode(x) for x in data]
     clastN = len(data)
 
+    # Делает N операций объединения, получая объединяемые элементы за O(1)
+    # и восстанавливая актуальность данных за 3*logn
     while clastN != 1:
-        print()
-        dumpIteration()
-        minDist = float('inf')
-        minP1_index = None
-        minP2_index = None
 
-
-        # Ищем пару точек с минимальным расстоянием между собой
-        # Ищем первую
-        for i in range(len(data)):
-            if not ignorePoint[i]:
-                closestLPoint_i = i
-                break
-        # Ищем лучшую пару
-        for i in range(closestLPoint_i+1, len(data)):
-            if not ignorePoint[i]:
-                closestRPoint_i = i
-
-                # Нашли вторую проверяем на минимальность
-                if distF(MclustCenter[closestLPoint_i], MclustCenter[closestRPoint_i]) < minDist:
-                    minDist =  distF(MclustCenter[closestLPoint_i], MclustCenter[closestRPoint_i])
-                    minP1_index = closestLPoint_i
-                    minP2_index = closestRPoint_i
-
-                # В любом случае исследуем дальше
-                closestLPoint_i = closestRPoint_i
-
-
-        print("best pair is ", minP1_index, minP2_index, "(%s %s) dist" % (nodes[minP1_index], nodes[minP2_index]), minDist)
-        # Нашли лучшую пару. Соединяем
         clastN -= 1
-        nodes[minP2_index] = createParent(nodes[minP1_index], nodes[minP2_index]) # Для представления в виде дерева
-        ignorePoint[minP1_index] = True
-        Mclust[minP1_index] = Mclust[minP2_index]
-        MclustCenter[minP2_index] = (MclustCenter[minP2_index] + MclustCenter[minP1_index]) / 2
-        #Нужно обновить distL и distR
-        lNeighbour = None
-        for i in range(minP1_index-1, -1, -1):
-            if not ignorePoint[i]:
-                lNeighbour = i
-                break
-        if lNeighbour:
-            distR[lNeighbour] = MclustCenter[minP2_index] - MclustCenter[lNeighbour]
-            distL[minP2_index] = MclustCenter[minP2_index] - MclustCenter[lNeighbour]
+
+        # Первая точка из пары ближайших друг к другу удаляется из кучи
+        # Вторая копируется
+        minP1 = dist2next.popitem()
+        minP2 = dist2next.getitem(minP1.next_i)
+        
+        # Обновление дендрограммы
+        nodes[minP2.key] = createParent(nodes[minP1.key], nodes[minP2.key])
+
+        # Вторая точка остаётся как нынешнее состояние кластеризованности
+        # Обновляется её приоритет в куче - расстояние до следующей точки
+        newClustCenter = (minP1.value + minP2.value) / 2
+        dist2next.updateitem(minP2.key, new_val=newClustCenter)
+        
+        # Поддержка актуальности данных
+        # Dist изменилась у 2 элементов
+        #   + Элемент до объединяемой пары (если он есть)
+        #   + Элемент, в который объединена пара 
+
+        # Если есть точка до, то обновить её dist2next
+        if (minP1.prev_i != None) and (minP1.prev_i != float("inf")):
+            dist = distF(dist2next.getitem(minP2.key).value, dist2next.getitem(minP1.prev_i).value)
+            dist2next.updateitem(minP1.prev_i, new_prio=dist)
+            # Перелинковать 
+            dist2next.updateItemLink(minP1.prev_i, newNext=minP2.key)
+            dist2next.updateItemLink(minP2.key, newPrev=minP1.prev_i)
         else:
-            distL[minP2_index] = float('inf')
+            # Если точки нет, то ссылка на предыдущий элемент пустая
+            dist2next.updateItemLink(minP2.key, newPrev=float('inf'))
 
-        rNeighbour = None
-        for i in range(minP2_index+1, len(data)):
-            if not ignorePoint[i]:
-                rNeighbour = i
-                break
-        if rNeighbour:
-            distL[rNeighbour] = MclustCenter[rNeighbour] - MclustCenter[minP2_index]
-            distR[minP2_index]= MclustCenter[rNeighbour] - MclustCenter[minP2_index]
-        else:
-            distR[minP2_index] = float('inf')
+        # Если есть точка после объединяемых, пересчитать расстояние до неё
+        if minP2.next_i == None: 
+            dist = float("inf")
+        else: 
+            dist = distF(newClustCenter, dist2next.getitem(minP2.next_i).value)
+        # И обновить приоритет
+        dist2next.updateitem(minP2.key, new_prio=dist)
 
-        if lNeighbour == rNeighbour == None:
-            print("Maybe end. lNeighbour=rNeighbour=None")
-
-    
-    dumpIteration()
-    return nodes[minP2_index]
+    return nodes[minP2.key]
